@@ -1,13 +1,14 @@
-
-version: '3'
+name: ecomgames
 services:
-  angular-app:
+  angular-ssr:
+    container_name: ecomgames
     build:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "80:80"
-    volumes:
-      - .:/app
+      - "80:4000"
     environment:
       - NODE_ENV=production
+      - PORT=4000
+      - HOST=0.0.0.0
+    restart: always

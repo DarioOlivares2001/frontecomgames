@@ -1,29 +1,31 @@
-# Etapa de construcción
-FROM node:18 AS build
+FROM node:20-alpine AS builder
 
-# Establecer el directorio de trabajo
 WORKDIR /app
 
 # Copiar package.json y package-lock.json
 COPY package*.json ./
 
-# Instalar las dependencias
+# Instalar dependencias
 RUN npm install
 
 # Copiar el resto del código fuente
 COPY . .
 
-# Construir la aplicación Angular
-RUN npm run build -- --output-path=dist/ecomgames --configuration production
+# Solo construir la aplicación, no ejecutar el servidor
+RUN npm run build
 
 # Etapa de producción
-FROM nginx:alpine
+FROM node:20-alpine
 
-# Copiar los archivos generados de la etapa de construcción
-COPY --from=build /app/dist/ecomgames /usr/share/nginx/html
+WORKDIR /app
 
-# Exponer el puerto 80
-EXPOSE 80
+# Copiar los archivos necesarios desde el builder
+COPY --from=builder /app/dist /app/dist
+COPY --from=builder /app/package*.json ./
 
-# Iniciar Nginx para servir la aplicación
-CMD ["nginx", "-g", "daemon off;"]
+
+# Exponer el puerto
+EXPOSE 4000
+
+# Comando para ejecutar el servidor SSR
+CMD ["node", "dist/ecomgames/server/server.mjs"]
